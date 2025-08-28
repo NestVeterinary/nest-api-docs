@@ -1,0 +1,91 @@
+name: Bug report
+description: Quick form to report a NestVet API issue
+title: "[BUG] <one-line summary>"
+labels: ["bug"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to help us improve the NestVet API. Please **remove or mask** secrets, tokens, and PII before submitting.
+
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint (optional)
+      placeholder: "POST /subscriptions"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue
+      description: What happened? What did you expect instead?
+      placeholder: |
+        Example: POST /subscriptions returns 500 for limit=50, offset=0.
+        Expected: 200 with an array of Subscription.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce (optional)
+      placeholder: |
+        1) ...
+        2) ...
+        3) ...
+
+  - type: textarea
+    id: request
+    attributes:
+      label: Request (cURL or JSON) — sanitized
+      description: Remove tokens and any personal data.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence (optional)
+      description: Status code, error text, or a sanitized snippet of the response.
+      placeholder: |
+        HTTP 500
+        {"error":"...","message":"..."}
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - S1 – Blocker (cannot complete primary flow)
+        - S2 – High (major impact, workaround exists)
+        - S3 – Medium (minor impact)
+        - S4 – Low (cosmetic or docs)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reproducibility
+    attributes:
+      label: Reproducibility
+      options:
+        - Always
+        - Intermittent
+        - Once
+    validations:
+      required: true
+
+  - type: input
+    id: when
+    attributes:
+      label: When (UTC, optional)
+      placeholder: "2025-08-15T14:21:00Z"
+
+  - type: checkboxes
+    id: data_handling
+    attributes:
+      label: Data handling
+      options:
+        - label: "I removed API tokens and any PII from logs and payloads."
+          required: true

@@ -1,0 +1,863 @@
+openapi: 3.1.0
+info:
+  title: NestVet API
+  version: '1.2'
+  description: API for managing subscriptions, pet benefits, payment plans, and Stripe-integrated financial data.
+servers:
+  - url: https://nestvet.com/api/1.1/wf
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    PaginationRequest:
+      type: object
+      required:
+        - organization
+        - limit
+        - offset
+      properties:
+        organization:
+          type: string
+        limit:
+          type: integer
+          format: int32
+        offset:
+          type: integer
+          format: int32
+    SubscriptionsRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaginationRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+            pet_id:
+              type: string
+            created_at_since:
+              type: string
+              format: date-time
+            updated_at_since:
+              type: string
+              format: date-time
+    PetBenefitsRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaginationRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+            subscription_id:
+              type: string
+            pet_id:
+              type: string
+            created_at_since:
+              type: string
+              format: date-time
+            updated_at_since:
+              type: string
+              format: date-time
+    PaymentPlansRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaginationRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+            subscription_id:
+              type: string
+            pet_id:
+              type: string
+            created_at_since:
+              type: string
+              format: date-time
+            updated_at_since:
+              type: string
+              format: date-time
+    ConsumptionRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaginationRequest'
+        - type: object
+          properties:
+            clinic:
+              type: string
+            id:
+              type: string
+            invoice_line_id:
+              type: string
+            invoice_line_pims_id:
+              type: string
+            subscription_id:
+              type: string
+            created_at_since:
+              type: string
+              format: date-time
+            updated_at_since:
+              type: string
+              format: date-time
+    ChargesRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaginationRequest'
+        - type: object
+          properties:
+            clinic:
+              type: string
+            id:
+              type: string
+            invoice_id:
+              type: string
+            invoice_pims_id:
+              type: string
+            created_at_since:
+              type: string
+              format: date-time
+            updated_at_since:
+              type: string
+              format: date-time
+    PayoutsRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaginationRequest'
+        - type: object
+          properties:
+            clinic:
+              type: string
+            starting_after:
+              type: string
+            status:
+              type: string
+              enum:
+                - pending
+                - paid
+                - failed
+                - canceled
+    PaymentsRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaginationRequest'
+        - type: object
+          properties:
+            clinic:
+              type: string
+            starting_after:
+              type: string
+    PetsRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaginationRequest'
+        - type: object
+          properties:
+            clinic:
+              type: string
+            id:
+              type: string
+            pims_id:
+              type: string
+            status:
+              type: string
+              enum:
+                - Good Standing
+                - Billing Issue
+                - Candidate
+                - Cancelled
+                - Non-renewal
+            created_at_since:
+              type: string
+              format: date-time
+            updated_at_since:
+              type: string
+              format: date-time
+    ClinicsRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaginationRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+            clinic_pims_id:
+              type: string
+    InvoicesRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaginationRequest'
+        - type: object
+          properties:
+            clinic:
+              type: string
+            id:
+              type: string
+            invoice_pims_id:
+              type: string
+            pet_id:
+              type: string
+            pet_pims_id:
+              type: string
+            created_at_since:
+              type: string
+              format: date-time
+            updated_at_since:
+              type: string
+              format: date-time
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+        is_active:
+          type: boolean
+        frequency:
+          type: string
+          enum:
+            - Daily
+            - Weekly
+            - Monthly
+            - Yearly
+        pet:
+          type: string
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        next_billing_date:
+          type: string
+          format: date-time
+          nullable: true
+        is_auto_renew:
+          type: boolean
+        wellness_plan:
+          type: string
+          nullable: true
+        payment_plan:
+          type: string
+        price_id_stripe:
+          type: string
+          nullable: true
+        subscription_id_stripe:
+          type: string
+          nullable: true
+        clinic:
+          type: string
+        pet_pims_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PetBenefit:
+      type: object
+      properties:
+        id:
+          type: string
+        pet:
+          type: string
+        subscription:
+          type: string
+        is_addon:
+          type: boolean
+        monthly_revenue_to_recognize_per_unit:
+          type: number
+          format: double
+          nullable: true
+        annual_revenue_to_recognize_per_unit:
+          type: number
+          format: double
+          nullable: true
+        revenue_to_recognize_per_unit:
+          type: number
+          format: double
+        allocated:
+          type: integer
+        remaining:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PaymentPlan:
+      type: object
+      properties:
+        id:
+          type: string
+        pet:
+          type: string
+        subscription:
+          type: string
+        payment_amount:
+          type: number
+          format: double
+        frequency:
+          type: string
+          enum:
+            - Daily
+            - Weekly
+            - Monthly
+            - Yearly
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Consumption:
+      type: object
+      properties:
+        id:
+          type: string
+        clinic:
+          type: string
+        invoice_pims_id:
+          type: string
+        invoice_date:
+          type: string
+          format: date-time
+        invoice_line:
+          type: string
+        invoice_line_aje_delta:
+          type: number
+          format: double
+        invoice_line_pims_id:
+          type: string
+        pet:
+          type: string
+        pet_benefit:
+          type: string
+        product_code:
+          type: string
+        product_name:
+          type: string
+        qty_available_on_plan:
+          type: integer
+        qty_consumed:
+          type: integer
+        qty_consumed_accum:
+          type: integer
+        qty_in_plan:
+          type: integer
+        qty_out_of_plan:
+          type: integer
+        qty_remaining:
+          type: integer
+        revenue_in_plan_total:
+          type: number
+          format: double
+        revenue_out_of_plan_total:
+          type: number
+          format: double
+        revenue_to_recognize_total:
+          type: number
+          format: double
+        revenue_to_recognize_per_unit:
+          type: number
+          format: double
+        subscription:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Charge:
+      type: object
+      properties:
+        id:
+          type: string
+        clinic:
+          type: string
+        invoice:
+          type: string
+        invoice_pims_id:
+          type: integer
+        invoice_total:
+          type: number
+          format: double
+        is_default:
+          type: boolean
+        parent:
+          type: string
+        payment_method_id:
+          type: string
+        card_last_4:
+          type: string
+        pets:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        stripe_payment_method_id:
+          type: string
+        total:
+          type: number
+          format: double
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Payout:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          enum:
+            - payout
+        amount:
+          type: integer
+        arrival_date:
+          type: integer
+        automatic:
+          type: boolean
+        balance_transaction:
+          type: string
+        created:
+          type: integer
+          description: The timestamp of the payout creation in seconds since the Unix epoch
+        currency:
+          type: string
+        description:
+          type: string
+          nullable: true
+        destination:
+          type: string
+          nullable: true
+        livemode:
+          type: boolean
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        method:
+          type: string
+        reconciliation_status:
+          type: string
+        source_type:
+          type: string
+        status:
+          type: string
+        trace_id:
+          type: object
+          properties:
+            status:
+              type: string
+            value:
+              type: string
+        type:
+          type: string
+    PaymentIntent:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          enum:
+            - payment_intent
+        amount:
+          type: integer
+        amount_capturable:
+          type: integer
+        amount_details:
+          type: object
+          properties:
+            tip:
+              type: object
+        amount_received:
+          type: integer
+        application:
+          type: string
+        application_fee_amount:
+          type: integer
+          nullable: true
+        automatic_payment_methods:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        canceled_at:
+          type: integer
+          nullable: true
+        cancellation_reason:
+          type: string
+          nullable: true
+        capture_method:
+          type: string
+        client_secret:
+          type: string
+        confirmation_method:
+          type: string
+        created:
+          type: integer
+          description: The timestamp of the payment intent creation in seconds since the Unix epoch
+        currency:
+          type: string
+        customer:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        invoice:
+          type: string
+          nullable: true
+        latest_charge:
+          type: string
+          nullable: true
+        livemode:
+          type: boolean
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        payment_method:
+          type: string
+          nullable: true
+        payment_method_options:
+          type: object
+          properties:
+            card:
+              type: object
+              properties:
+                installments:
+                  nullable: true
+                mandate_options:
+                  nullable: true
+                network:
+                  nullable: true
+                request_three_d_secure:
+                  type: string
+        payment_method_types:
+          type: array
+          items:
+            type: string
+        processing:
+          nullable: true
+        setup_future_usage:
+          type: string
+          nullable: true
+        shipping:
+          nullable: true
+        status:
+          type: string
+    PayoutsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payout'
+        has_more:
+          type: boolean
+    PaymentsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentIntent'
+        has_more:
+          type: boolean
+    Pet:
+      type: object
+      properties:
+        id:
+          type: string
+        pims_id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        gender:
+          type: string
+        spayed_or_neutered:
+          type: boolean
+        microchipped:
+          type: boolean
+        date_of_birth:
+          type: string
+        active_subscription:
+          type: string
+          nullable: true
+        active_wellness_plan:
+          type: string
+          nullable: true
+        membership_start_date:
+          type: string
+          format: date-time
+          nullable: true
+        membership_status:
+          type: string
+          nullable: true
+        clinic:
+          type: string
+        organization:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Clinic:
+      type: object
+      properties:
+        id:
+          type: string
+        clinic_pims_id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        time_zone:
+          type: string
+        url:
+          type: string
+        organization:
+          type: string
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+        organization:
+          type: string
+        clinic:
+          type: string
+        date:
+          type: string
+          format: date-time
+        invoice_lines:
+          type: array
+          items:
+            type: string
+        invoice_pims_id:
+          type: string
+        pets:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        subscriptions:
+          type: array
+          items:
+            type: string
+        subtotal:
+          type: number
+          format: double
+        tax:
+          type: number
+          format: double
+        total:
+          type: number
+          format: double
+paths:
+  /subscriptions:
+    post:
+      summary: List subscriptions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionsRequest'
+      responses:
+        '200':
+          description: A list of subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subscription'
+  /pet-benefits:
+    post:
+      summary: List pet benefits
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetBenefitsRequest'
+      responses:
+        '200':
+          description: A list of pet benefits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PetBenefit'
+  /payment-plans:
+    post:
+      summary: List payment plans
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentPlansRequest'
+      responses:
+        '200':
+          description: A list of payment plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentPlan'
+  /consumption:
+    post:
+      summary: List consumption records
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumptionRequest'
+      responses:
+        '200':
+          description: A list of consumption records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Consumption'
+  /charges:
+    post:
+      summary: List charges
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChargesRequest'
+      responses:
+        '200':
+          description: A list of charges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Charge'
+  /payouts:
+    post:
+      summary: List Stripe payouts
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayoutsRequest'
+      responses:
+        '200':
+          description: Stripe payouts response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutsResponse'
+  /payments:
+    post:
+      summary: List Stripe payment intents
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentsRequest'
+      responses:
+        '200':
+          description: Stripe payment intents response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsResponse'
+  /pets:
+    post:
+      summary: List pets
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetsRequest'
+      responses:
+        '200':
+          description: A list of pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+  /clinics:
+    post:
+      summary: List clinics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClinicsRequest'
+      responses:
+        '200':
+          description: A list of clinics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Clinic'
+  /invoices:
+    post:
+      summary: List invoices
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoicesRequest'
+      responses:
+        '200':
+          description: A list of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
